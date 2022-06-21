@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System;
 using Unit04.Game.Casting;
 using Unit04.Game.Services;
 
@@ -13,6 +14,11 @@ namespace Unit04.Game.Directing
     /// </summary>
     public class Director
     {
+        private int score = 0;
+        private static int COLS = 60;
+        private static int ROWS = 40;
+        private static int CELL_SIZE = 20;
+        private static int FONT_SIZE = 30;
         private KeyboardService keyboardService = null;
         private VideoService videoService = null;
 
@@ -33,12 +39,48 @@ namespace Unit04.Game.Directing
         /// <param name="cast">The given cast.</param>
         public void StartGame(Cast cast)
         {
+            int counter = 1;
             videoService.OpenWindow();
             while (videoService.IsWindowOpen())
             {
+                Random random = new Random();
+                int x = random.Next(1, COLS);
+                int y = 0;
+                Point position = new Point(x, y);
+                position = position.Scale(CELL_SIZE);
+
+                if(counter % 2 == 0)
+                {
+                    Color color = new Color(128, 128, 128);
+                    Rock rock = new Rock();
+                    rock.SetText("o");
+                    rock.SetFontSize(FONT_SIZE);
+                    rock.SetColor(color);
+                    rock.SetPosition(position);
+
+                    cast.AddActor("rocks", rock);
+                }
+                else
+                {
+                    int r = random.Next(0, 256);
+                    int g = random.Next(0, 256);
+                    int b = random.Next(0, 256);
+                    Color color = new Color(r, g, b);
+                    Gem gem = new Gem();
+
+                    gem.SetText("*");
+                    gem.SetFontSize(FONT_SIZE);
+                    gem.SetColor(color);
+                    gem.SetPosition(position);
+
+                    cast.AddActor("gems", gem);
+                }
+
                 GetInputs(cast);
                 DoUpdates(cast);
                 DoOutputs(cast);
+
+                counter++;
             }
             videoService.CloseWindow();
         }
@@ -62,22 +104,38 @@ namespace Unit04.Game.Directing
         {
             Actor banner = cast.GetFirstActor("banner");
             Actor robot = cast.GetFirstActor("robot");
-            List<Actor> artifacts = cast.GetActors("artifacts");
+            List<Actor> rocks = cast.GetActors("rocks");
+            List<Actor> gems = cast.GetActors("gems");
 
-            banner.SetText("");
             int maxX = videoService.GetWidth();
             int maxY = videoService.GetHeight();
             robot.MoveNext(maxX, maxY);
+            Point newPoint = new Point(0, 10);
 
-            foreach (Actor actor in artifacts)
+            foreach (Rock rock in rocks)
             {
-                if (robot.GetPosition().Equals(actor.GetPosition()))
+                Point point = rock.GetPosition();
+                point = point.Add(newPoint);
+                rock.SetPosition(point);
+                if (robot.GetPosition().Equals(rock.GetPosition()))
                 {
-                    Artifact artifact = (Artifact) actor;
-                    string message = artifact.GetMessage();
-                    banner.SetText(message);
+                    score += rock.GetAddPoint();
+                    cast.GetFirstActor("banner").SetText("SCORE: " +score);
+                    cast.RemoveActor("rocks", rock);
                 }
             } 
+            foreach (Gem gem in gems)
+            {
+                Point point = gem.GetPosition();
+                point = point.Add(newPoint);
+                gem.SetPosition(point);
+                if (robot.GetPosition().Equals(gem.GetPosition()))
+                {
+                    score += gem.GetAddPoint();
+                    cast.GetFirstActor("banner").SetText("SCORE: " +score);
+                    cast.RemoveActor("gems", gem);
+                }
+            }
         }
 
         /// <summary>

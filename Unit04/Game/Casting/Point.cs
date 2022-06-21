@@ -42,7 +42,17 @@ namespace Unit04.Game.Casting
         /// <returns>True if both x and y are equal; false if otherwise.</returns>
         public bool Equals(Point other)
         {
-            return this.x == other.GetX() && this.y == other.GetY();
+            if (this.x - other.GetX() < 15 && this.x - other.GetX() > -15)
+            {
+                if (this.y - other.GetY() < 15 && this.y - other.GetY() > -15)
+                {
+                    return true;
+                }
+                else
+                    return false;
+            }
+            else
+                return false;
         }
 
         /// <summary>
